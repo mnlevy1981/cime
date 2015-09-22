@@ -3182,7 +3182,7 @@
 	 sdesc="coupler sequencing option"
 	 ldesc=
 	 "coupler sequencing option. CESM1_ORIG is the cesm1.1 implementation.  
-	  CESM!_MOD includes a cesm1.3 mod that swaps ocean merging and atm/ocn flux 
+	  CESM1_MOD includes a cesm1.3 mod that swaps ocean merging and atm/ocn flux 
 	  computation.  RASM_OPTION1 runs prep ocean before the ocean coupling reducing 
 	  most of the lags and field inconsistency but still allowing the ocean to run 
 	  concurrently with the ice and atmosphere.  RASM_OPTION2 is similar to RASM_OPTION1 
