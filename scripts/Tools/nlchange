@@ -1,0 +1,164 @@
+#!/usr/bin/env perl
+
+#------------------------------------------------------------------------------
+#
+# nlchange
+#
+# This utility provides an easy interface to add variables to the user_nl_*
+# files. At the current time, no error checking is done to make sure you are
+# adding a defined variable to the namelist (or that you are assigning it a
+# valid value), that is still done in build-namelist. The only error this
+# script will return is if user_nl_[comp] does not exist for the specified
+# component.
+#
+# The command is echoed to the CaseStatus file, unless -noecho is given. The
+# purpose of this echoing is to provide a "paper trail" of changes made by the
+# user, so calls to nlchange by the cime scripts that are part of the normal
+#  case setup/build process should generally use -noecho.
+#
+#------------------------------------------------------------------------------
+
+use strict;
+use Getopt::Long;
+use XML::LibXML;
+
+#------------------------------------------------------------------------------
+sub usage {
+    die <<EOF;
+SYNOPSIS
+     nlchange [options] <listofsettings>
+DESCRIPTION
+     allows user to modify a user_nl_* file
+
+OPTIONS
+     User supplied values are denoted in angle brackets (<>).  Any value that contains
+     white-space must be quoted.  Long option names may be supplied with either single
+     or double leading dashes.  A consequence of this is that single letter options may
+     NOT be bundled.
+REQUIRED OPTIONS
+
+   Either provide ALL of the following [options] to modify a single variable...
+
+     -comp <name>         name of component to modify
+     -id <name>           namelist variable id
+     -val <name>          new value for variable id
+
+   ... or provide the settings in a comma-delimited list form as: <listofsettings>
+
+      comp::var=value,comp2::var2=value2
+
+   NOTE: NO-Whitespace. No spaces between commas, or in values unless you quote the
+         entire string so the shell recognizes it as one thing. Also values can NOT
+         contain the symbols "=" or ",".
+
+EOF
+}
+
+#------------------------------------------------------------------------------
+if ($#ARGV == -1) {
+    print "ERROR nlchange: no arguments sent in\n";
+    usage();
+}
+
+my $xml = XML::LibXML->new( no_blanks => 1)->parse_file("env_case.xml"); 
+my @nodes = $xml->findnodes(".//entry[\@id=\"CIMEROOT\"]"); 
+my $cimeroot = $nodes[0]->getAttribute('value');
+unshift @INC, "$cimeroot/utils/perl5lib";
+require Log::Log4perl;
+
+# Parse command-line options.
+my @saved_argv = @ARGV;
+
+my %opts = (
+    comp=>undef,
+    id=>undef,
+    val=>undef,
+    loglevel => "INFO"
+    );
+
+GetOptions(
+    "comp=s"     => \$opts{'comp'},
+    "id=s"       => \$opts{'id'},
+    "val=s"      => \$opts{'val'},
+    "h|help"     => \$opts{'help'},
+    "noecho"     => \$opts{'noecho'},
+    "loglevel=s"  => \$opts{'loglevel'},
+)  or usage();
+
+my $level = Log::Log4perl::Level::to_priority($opts{loglevel});
+Log::Log4perl->easy_init({level=>$level,
+			  layout=>'%m%n'});
+
+my $logger = Log::Log4perl::get_logger();
+
+# Give usage message.
+usage() if $opts{'help'};
+
+# Get the list form if anything else is set
+my $settinglist = shift(@ARGV);
+
+# Check for unparsed argumentss
+if (@ARGV) {
+    $logger->error( "ERROR nlchange: unrecognized arguments: @ARGV");
+    $logger->error( "A list of ID's needs to be comma-delimited with NO-WHITESPACE!");
+    usage();
+}
+
+# Check for manditory case input if not just listing valid values
+my %idlist;
+if ( ! defined($settinglist) ) {
+   foreach my $item ( "comp", "id", "val" ) 
+   {
+      if ( ! defined($opts{$item}) ) {
+         $logger->error( "ERROR nlchange : Must provide $item as input argument ");
+         usage();
+      }
+   }
+   update_user_nl($opts{'comp'}, $opts{'id'}, $opts{'val'});
+} else {
+   foreach my $compvarval ( split( /,/, $settinglist ) ) {
+      my @work = split( /::/, $compvarval);
+      my $comp = @work[0];
+      my @varvel = split ( /=/, @work[1]);
+      my $var = @varvel[0];
+      my $val = @varvel[1];
+      update_user_nl($comp, $var, $val);
+   }
+}
+
+if (! $opts{'noecho'}) {
+   echo_command_to_CaseStatus();
+}
+
+#------------------------------------------------------------------------------
+sub update_user_nl
+{
+  my $comp = shift;
+  my $id   = shift;
+  my $val  = shift;
+  my $file = "user_nl_$comp";
+
+  if (-f $file) {
+    open (user_nl_file,">>$file");
+  } else {
+    die "ERROR: could not open $file";
+  }
+  print user_nl_file "$id = $val\n";
+  close user_nl_file;
+}
+
+#------------------------------------------------------------------------------
+sub echo_command_to_CaseStatus {
+
+   my $CS = "CaseStatus";
+   if (-f $CS) {
+      open (CaseStatus,">>$CS");
+      print CaseStatus "<command>nlchange @saved_argv</command>\n";
+      close CaseStatus;
+   }
+   else {
+      $logger->warn ("WARNING: No CaseStatus file found; this nlchange command has been executed, but not recorded in the CaseStatus file");
+   }
+}   
+
+#------------------------------------------------------------------------------

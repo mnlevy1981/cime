@@ -879,6 +879,7 @@ sub _create_caseroot_tools
 	"$cimeroot/scripts/Tools/create_production_test", 
 	"$cimeroot/scripts/Tools/xmlchange",
 	"$cimeroot/scripts/Tools/xmlquery",
+	"$cimeroot/scripts/Tools/nlchange",
 	"$cimeroot/scripts/Tools/st_archive", 
 	"$cimeroot/scripts/Tools/README.post_process", 
 	); 
