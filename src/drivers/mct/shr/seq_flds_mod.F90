@@ -1401,6 +1401,33 @@ contains
     attname  = 'So_ustar'
     call metadata_set(attname, longname, stdname, units)
 
+   ! MODIS Cloud fraction
+    call seq_flds_add(a2x_states,"Sa_m_cloudfrac")
+    call seq_flds_add(x2o_states,"Sa_m_cloudfrac")
+    longname = 'MODIS Cloud fraction'
+    stdname  = 'modis_cloud_frac'
+    units    = '1'
+    attname  = 'Sa_m_cloudfrac'
+    call metadata_set(attname, longname, stdname, units)
+
+    ! ISCCP Cloud fraction
+    call seq_flds_add(a2x_states,"Sa_i_cloudfrac")
+    call seq_flds_add(x2o_states,"Sa_i_cloudfrac")
+    longname = 'ISCCP Cloud fraction'
+    stdname  = 'isccp_cloud_frac'
+    units    = '1'
+    attname  = 'Sa_i_cloudfrac'
+    call metadata_set(attname, longname, stdname, units)
+
+   ! Solar Zenith Angle
+    call seq_flds_add(a2x_states,"Sa_coszen")
+    call seq_flds_add(x2o_states,"Sa_coszen")
+    longname = 'Cos Solar Zenith Angle'
+    stdname  = 'cos_zenith_angle'
+    units    = '1'
+    attname  = 'Sa_coszen'
+    call metadata_set(attname, longname, stdname, units)
+
     !-----------------------------
     ! ice<->ocn only exchange
     !-----------------------------
@@ -2179,8 +2206,8 @@ contains
        attname  = 'Flrr_supply'
        call metadata_set(attname, longname, stdname, units)
     endif
-    
-	if (trim(cime_model) == 'e3sm') then   
+
+	if (trim(cime_model) == 'e3sm') then
        call seq_flds_add(r2x_fluxes,'Flrr_deficit')
        call seq_flds_add(x2l_fluxes,'Flrr_deficit')
        longname = 'River model supply deficit'
