@@ -73,7 +73,7 @@ module datm_comp_mod
   data   dTarc      / 0.49_R8, 0.06_R8,-0.73_R8,  -0.89_R8,-0.77_R8,-1.02_R8, &
        -1.99_R8,-0.91_R8, 1.72_R8,   2.30_R8, 1.81_R8, 1.06_R8/
 
-  integer(IN) :: kz,ktopo,ku,kv,ktbot,kptem,kshum,kdens,kpbot,kpslv,klwdn
+  integer(IN) :: kz,ktopo,ku,kv,ktbot,kptem,kshum,kdens,kpbot,kpslv,klwdn,kcloudfrac
   integer(IN) :: krc,krl,ksc,ksl,kswndr,kswndf,kswvdr,kswvdf,kswnet
   integer(IN) :: kanidr,kanidf,kavsdr,kavsdf
   integer(IN) :: stbot,swind,sz,spbot,sshum,stdew,srh,slwdn,sswdn,sswdndf,sswdndr
@@ -100,7 +100,7 @@ module datm_comp_mod
   real(R8), pointer    :: winddFactor(:)
   real(R8), pointer    :: qsatFactor(:)
 
-  integer(IN),parameter :: ktrans  = 77
+  integer(IN),parameter :: ktrans  = 78
 
   character(16),parameter  :: avofld(1:ktrans) = &
        (/"Sa_z            ","Sa_topo         ", &
@@ -118,7 +118,7 @@ module datm_comp_mod
        "Sl_snowh        ","Sf_lfrac        ","Sf_ifrac        ","Sf_ofrac        ", &
        "Faxx_taux       ","Faxx_tauy       ","Faxx_lat        ","Faxx_sen        ", &
        "Faxx_lwup       ","Faxx_evap       ","Fall_fco2_lnd   ","Faoo_fco2_ocn   ", &
-       "Faoo_fdms_ocn   ",  &
+       "Faoo_fdms_ocn   ","Sa_i_cloudfrac  ", &
                                 ! add values for bias correction / anomaly forcing
        "Sa_precsf       ", &
        "Sa_prec_af      ","Sa_u_af         ","Sa_v_af         ","Sa_tbot_af      ",&
@@ -145,7 +145,7 @@ module datm_comp_mod
        "snowhl          ","lfrac           ","ifrac           ","ofrac           ", &
        "taux            ","tauy            ","lat             ","sen             ", &
        "lwup            ","evap            ","co2lnd          ","co2ocn          ", &
-       "dms             ", &
+       "dms             ","cloudfrac       ",&
                                 ! add values for bias correction / anomaly forcing (add Sa_precsf for precip scale factor)
        "precsf          ", &
        "prec_af         ","u_af            ","v_af            ","tbot_af         ", &
@@ -368,6 +368,7 @@ CONTAINS
        kdens = mct_aVect_indexRA(a2x,'Sa_dens')
        kpbot = mct_aVect_indexRA(a2x,'Sa_pbot')
        kpslv = mct_aVect_indexRA(a2x,'Sa_pslv')
+       kcloudfrac= mct_aVect_indexRA(a2x,'Sa_i_cloudfrac') ! new line
        klwdn = mct_aVect_indexRA(a2x,'Faxa_lwdn')
        krc   = mct_aVect_indexRA(a2x,'Faxa_rainc')
        krl   = mct_aVect_indexRA(a2x,'Faxa_rainl')
