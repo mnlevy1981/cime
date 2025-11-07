@@ -4,7 +4,7 @@
 # SVN $URL: https://svn-ccsm-models.cgd.ucar.edu/tools/mapping/trunk_tags/mapping_141106/gen_mapping_files/gen_ESMF_mapping_file/create_ESMF_map.sh $
 #
 # Create needed mapping files for gen_domain and coupler mapping
-# Currently supported on cheyenne, geyser, caldera, and pronghorn
+# Currently supported on derecho, casper, caldera, and pronghorn
 #
 #===============================================================================
 echo $0
@@ -64,8 +64,8 @@ usage() {
   echo '   Load the serial ESMF tools rather than the parallel tools'
   echo '   (necessary for mapping grids with a single point).'
   echo ' --machine (or -mach)'
-  echo '   Name of the machine you are running on. Currently supports cheyenne,'
-  echo '   geyser, caldera, and pronghorn. Note that this script will'
+  echo '   Name of the machine you are running on. Currently supports derecho,'
+  echo '   casper, caldera, and pronghorn. Note that this script will'
   echo '   determine the machine name automatically from the hostfile command.'
   echo ' -d'
   echo '   toggle debug-only'
@@ -74,10 +74,10 @@ usage() {
   echo ''
   echo 'You can also set the following env variables:'
   echo '  ESMFBIN_PATH - Path to ESMF binaries'
-  echo '                 (Leave unset on cheyenne/caldera/geyser/pronghorn'
+  echo '                 (Leave unset on derecho/casper/geyser/pronghorn'
   echo '                 and the tool will be loaded from modules)'
   echo '  MPIEXEC ------ Name of mpirun executable'
-  echo '                 (ignored if --serial, which is default on cheyenne'
+  echo '                 (ignored if --serial, which is default on derecho'
   echo '                 login nodes'
   echo '**********************************************************'
 }
@@ -210,12 +210,12 @@ shopt -s extglob
 if [ $MACH == "UNSET" ]; then
   hostname=`hostname`
   case $hostname in
-    cheyenne* )
-      MACH="cheyenne"
-      cheyenne_login=TRUE
+    derecho* )
+      MACH="derecho"
+      derecho_login=TRUE
     ;;
-    r+([0-9])i+([0-9])n+([0-9]) )
-      MACH="cheyenne"
+    dec+([0-9]) )
+      MACH="derecho"
     ;;
     casper* )
       MACH="dav"
@@ -231,8 +231,8 @@ if [ $MACH == "UNSET" ]; then
 fi
 
 # machine-specific restrictions
-if [ "$cheyenne_login" == "TRUE" ] && [ "$serial" != "TRUE" ]; then
-  echo "ERROR: You are trying to use parallal ESMF tools on the cheyenne login node."
+if [ "$derecho_login" == "TRUE" ] && [ "$serial" != "TRUE" ]; then
+  echo "ERROR: You are trying to use parallal ESMF tools on the derecho login node."
   echo "       Either run with '--serial' or move to a compute node."
   exit 1
 fi
@@ -293,19 +293,20 @@ fi
 #-------------------------------------------------------------------------------
 
 case $MACH in
-  ## cheyenne
-  "cheyenne" )
+  ## derecho
+  "derecho" )
     esmfvers=8.1.0b23
     intelvers=19.0.5
+    . /glade/u/apps/derecho/24.12/spack/opt/spack/lmod/8.7.37/gcc/12.4.0/nr3e/lmod/lmod/init/sh
+    module load cesmdev/1.0 ncarenv/24.12
     module purge
-    module load intel/$intelvers esmf_libs
-    module use /glade/p/cesmdata/cseg/PROGS/modulefiles/esmfpkgs/intel/$intelvers
+    module load conda/latest nco craype cmake intel/2024.2.1 mkl kokkos/4.2.01 ncarcompilers/1.0.0 cray-mpich/8.1.29 netcdf-mpi/4.9.2 parallel-netcdf/1.14.0 parallelio/2.6.4 esmf/8.8.0
+
     if [ "$serial" == "TRUE" ]; then
       # No MPIEXEC
       if [ -z "$MPIEXEC" ]; then
         MPIEXEC=""
       fi
-      module load esmf-${esmfvers}-ncdfio-mpiuni-O
     else
       # MPIEXEC should be mpirun -np
       if [ -z "$MPIEXEC" ]; then
@@ -314,8 +315,6 @@ case $MACH in
         fi
         MPIEXEC="mpirun -np $NCPUS"
       fi
-      module load esmf-${esmfvers}-ncdfio-mpt-O
-      module load mpt/2.22
     fi
     # need to load module to access ncatted
     module load nco
