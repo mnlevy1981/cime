@@ -70,7 +70,7 @@ class Grids(GenericXML):
         gridinfo.update(domains)
 
         # determine gridmaps given component_grids
-        gridmaps = self._get_gridmaps(component_grids)
+        gridmaps = self._get_gridmaps(compset, component_grids)
         gridinfo.update(gridmaps)
 
         return gridinfo
@@ -263,7 +263,7 @@ class Grids(GenericXML):
                             domains[path_name] = path
         return domains
 
-    def _get_gridmaps(self, component_grids):
+    def _get_gridmaps(self, compset, component_grids):
         """
         set all mapping files for config_grids.xml v2 schema
         """
@@ -289,7 +289,17 @@ class Grids(GenericXML):
                 gridmap_nodes = self.get_children("gridmap", root=self.get_child("gridmaps"),
                                                attributes={gridname:gridvalue, other_gridname:other_gridvalue})
                 for gridmap_node in gridmap_nodes:
-                    expect(len(self.attrib(gridmap_node)) == 2,
+                    compset_attrib = self.get(gridmap_node, "compset")
+                    if compset_attrib:
+                        compset_match = re.search(compset_attrib, compset)
+                        if compset_match is None:
+                            continue
+                    not_compset_attrib = self.get(gridmap_node, "not_compset")
+                    if not_compset_attrib:
+                        not_compset_match = re.search(not_compset_attrib, compset)
+                        if not_compset_match is not None:
+                            continue
+                    expect(len(self.attrib(gridmap_node)) >= 2,
                            " Bad attribute count in gridmap node %s"%self.attrib(gridmap_node))
                     map_nodes = self.get_children("map",root=gridmap_node)
                     for map_node in map_nodes:

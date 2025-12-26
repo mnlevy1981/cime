@@ -142,6 +142,8 @@
       <xs:attribute ref="ocn_grid"/>
       <xs:attribute ref="rof_grid" />
       <xs:attribute ref="wav_grid"/>
+      <xs:attribute name="compset" type="xs:token"/>
+      <xs:attribute name="not_compset" type="xs:token"/>
     </xs:complexType>
   </xs:element>
 
